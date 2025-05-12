@@ -1,0 +1,28 @@
+Sub Create_Tables()
+
+DoCmd.RunSQL "CREATE TABLE Materiel(" & _
+   "idMateriel INT," & _
+   "nom VARCHAR(50)," & _
+   "PRIMARY KEY(idMateriel)" & _
+");"   
+
+DoCmd.RunSQL "CREATE TABLE Utilisateur(" & _
+   "idUtilisateur INT," & _
+   "Nom VARCHAR(20)," & _
+   "Prenom VARCHAR(20)," & _
+   "email VARCHAR(50)," & _
+   "PRIMARY KEY(idUtilisateur)" & _
+");"   
+
+DoCmd.RunSQL "CREATE TABLE Reservation(" & _
+   "idReservation INT," & _
+   "dateDebut DATETIME," & _
+   "dateFin DATETIME," & _
+   "idUtilisateur INT NOT NULL," & _
+   "idMateriel INT NOT NULL," & _
+   "PRIMARY KEY(idReservation)," & _
+   "FOREIGN KEY(idUtilisateur) REFERENCES Utilisateur(idUtilisateur)," & _
+   "FOREIGN KEY(idMateriel) REFERENCES Materiel(idMateriel)" & _
+");"   
+
+End Sub
