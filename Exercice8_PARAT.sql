@@ -5,17 +5,50 @@
 --    date_fin (date de fin de la disponibilité)
 
 CREATE TABLE Disponibilite(
-   id_disponibilite SERIAL,
-   date_debut DATE,
-   date_fin DATE,
-   id_materiel INTEGER NOT NULL,
-   PRIMARY KEY(id_disponibilite),
-   FOREIGN KEY(id_materiel) REFERENCES Materiel(materialid)
+   idDisponibilite SERIAL,
+   dateDebut DATE,
+   dateFin DATE,
+   idMateriel INTEGER NOT NULL,
+   PRIMARY KEY(idDisponibilite),
+   FOREIGN KEY(idMateriel) REFERENCES Materiel(idMateriel)
 );
 
 -- Modifiez la table "reservation" en ajoutant une nouvelle colonne "id_disponibilite" (clé étrangère référençant la table "disponibilite").
+-- Modifiez les contraintes SQL existantes pour prendre en compte les contraintes de disponibilité lors de la création et de la mise à jour des réservations
 
 ALTER TABLE reservation
-ADD COLUMN id_disponibilite INTEGER,
-ADD CONSTRAINT fk_disponibilite
-    FOREIGN KEY (id_disponibilite) REFERENCES disponibilite(id_disponibilite);
+ADD COLUMN idDisponibilite INTEGER,
+ADD CONSTRAINT fkDisponibilite
+    FOREIGN KEY (idDisponibilite) REFERENCES disponibilite(idDisponibilite);
+
+-- Implémentez une fonctionnalité permettant de vérifier la disponibilité d'un matériel pour une période donnée avant de permettre la réservation. Si le matériel n'est pas disponible, affichez un message d'erreur approprié.
+
+SELECT
+    materiel.idMateriel,
+    Materiel.nom,
+    -- On commence une expression conditionnelle (CASE) pour retourner 'OK' si une disponibilité existe selon les critères, sinon 'KO'.
+    CASE 
+        WHEN EXISTS (
+            -- on regarde dans la table Disponibilite s'il existe au moins une plage de disponibilité pour ce matériel.
+            SELECT 1
+            FROM Disponibilite
+            WHERE Disponibilite.idMateriel = Materiel.idMateriel
+              AND '2025-05-13' >= Disponibilite.dateDebut
+              AND '2025-05-14' <= Disponibilite.dateFin
+              -- On verifie que cette disponibilité n’est pas déjà réservé pour la période demandée.
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM Reservation
+                  WHERE Reservation.idDisponibilite = Disponibilite.idDisponibilite
+                    AND ('2025-05-13', '2025-05-14') OVERLAPS (Reservation.dateDebut, Reservation.dateFin)
+              )
+        )
+        THEN 'OK'
+        ELSE 'KO'
+    END AS statut_disponibilite
+FROM Materiel
+WHERE Materiel.idMateriel = 5;
+
+
+-- Implémentez une fonctionnalité permettant de gérer les disponibilités du matériel. Les administrateurs doivent pouvoir ajouter, modifier et supprimer des périodes de disponibilité pour chaque matériel.
+
